@@ -1,0 +1,40 @@
+[DefName advent]
+input         advent\2024\01\input.txt  
+
+[Function run]
+File.Close
+If <File.Open <def.input>>
+    serv.list.left_numbers.clear
+    serv.list.right_numbers.clear
+    local.total=0
+    local.similarity=0
+    for i 0 <eval <File.FileLines <def.input>> - 2>
+        local.line = <File.ReadLine.<dlocal.i>>
+        local.left = <strarg <local.line>>
+        local.right = <streat <local.line>>
+        serv.list.left_numbers.add <local.left>
+        serv.list.right_numbers.add <local.right>
+    endfor
+    Serv.List.left_numbers.Sort iasc
+    Serv.List.right_numbers.Sort iasc
+    for i 0 <eval <Serv.List.left_numbers.Count> - 1>
+        local.left = <Serv.List.left_numbers.<dlocal.i>>
+        local.total += abs(<local.left> - <Serv.List.right_numbers.<dlocal.i>>)
+        local.similarity += <local.left> * <f_count_right <local.left>>
+    endfor
+    SayU Total: <dLocal.Total>
+    SayU Similarity: <dLocal.Similarity>
+Else
+    SayU File could not be opened.
+EndIf
+
+[Function f_count_right]
+local.a = <Serv.List.right_numbers.FindElem <ArgV[0]>>
+local.c = 0
+while <Serv.List.right_numbers.<dLocal.a>> == <ArgV[0]>
+    local.c ++
+    local.a ++
+endwhile
+return <local.c>
+
+[EOF]
