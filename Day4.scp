@@ -1,0 +1,126 @@
+[DefName advent]
+input           advent\2024\04\input.txt
+linebreak       10
+X               88
+M               77
+A               65
+S               83
+
+//0 - part 1/2
+[Function run]
+File.Close
+If <File.Open <def.input>>
+    var.linecount = <eval <File.FileLines <def.input>> - 1>
+    for i 1 <var.linecount>
+        serv.list.<dlocal.i>.clear
+        readlinetolist <local.i>
+    endfor
+
+    local.total = 0
+    for i 1 <var.linecount>
+        for j 0 <var.linelen>
+            if !<argv[0]> //part 1
+                if <serv.list.<dlocal.i>.<dlocal.j>> == <def.x>
+                    local.total += <findxmas "X,M,A,S", <local.i>, <local.j>, 0, 0>
+                endif
+            else //part 2
+                if <serv.list.<dlocal.i>.<dlocal.j>> == <def.a>
+                    local.total += <findx <local.i>, <local.j>>
+                endif
+            endif
+        endfor
+    endfor
+    serv.log Total occurances of 'XMAS' in file: <dlocal.total>
+Else
+    serv.log File could not be opened.
+EndIf
+
+//0 what to look for
+//1 i
+//2 j
+//3 di
+//4 dj
+[function findxmas]
+if <argv[1]> < 1
+    return 0
+elif <argv[2]> < 0
+    return 0
+elif <argv[1]> > <var.linecount>
+    return 0
+elif <argv[2]> > <var.linelen>
+    return 0
+else
+    if <strarg <argv[0]>> != <serv.list.<dargv[1]>.<dargv[2]>>
+        return 0
+    endif
+    if <serv.list.<dargv[1]>.<dargv[2]>> == <def.s>
+        return 1
+    endif
+    if <argv[3]> || <argv[4]>
+        return <findxmas "<streat <argv[0]>>", <eval <argv[1]> + <argv[3]>>, <eval <argv[2]> + <argv[4]>>, <argv[3]>, <argv[4]>>
+    endif
+    local.sum = <findxmas "<streat <argv[0]>>", <argv[1]>,             <eval <argv[2]> + 1>,   0, 1>
+    local.sum += <findxmas "<streat <argv[0]>>", <argv[1]>,             <eval <argv[2]> - 1>,   0, -1>
+    local.sum += <findxmas "<streat <argv[0]>>", <eval <argv[1]> - 1>,  <eval <argv[2]> - 1>,   -1, -1>
+    local.sum += <findxmas "<streat <argv[0]>>", <eval <argv[1]> - 1>,  <argv[2]>,              -1, 0>
+    local.sum += <findxmas "<streat <argv[0]>>", <eval <argv[1]> - 1>,  <eval <argv[2]> + 1>,   -1, 1>
+    local.sum += <findxmas "<streat <argv[0]>>", <eval <argv[1]> + 1>,  <eval <argv[2]> - 1>,   1, -1>
+    local.sum += <findxmas "<streat <argv[0]>>", <eval <argv[1]> + 1>,  <argv[2]>,              1, 0>
+    local.sum += <findxmas "<streat <argv[0]>>", <eval <argv[1]> + 1>,  <eval <argv[2]> + 1>,   1, 1>
+    return <local.sum>
+endif
+
+[function findx]
+if <argv[0]> <= 1
+    return 0
+elif <argv[1]> <= 0
+    return 0
+elif <argv[0]> >= <var.linecount>
+    return 0
+elif <argv[1]> >= <var.linelen>
+    return 0
+else
+    if ((<checkdiag <def.m>,<argv[0]>,<argv[1]>, -1, -1> && <checkdiag <def.s>,<argv[0]>,<argv[1]>, 1, 1>) || (<checkdiag <def.s>,<argv[0]>,<argv[1]>, -1, -1> && <checkdiag <def.m>,<argv[0]>,<argv[1]>, 1, 1>))
+        if ((<checkdiag <def.m>,<argv[0]>,<argv[1]>, -1, 1> && <checkdiag <def.s>,<argv[0]>,<argv[1]>, 1, -1>) || (<checkdiag <def.s>,<argv[0]>,<argv[1]>, -1, 1> && <checkdiag <def.m>,<argv[0]>,<argv[1]>, 1, -1>))
+            return 1
+        endif
+    endif
+    return 0
+endif
+
+//0 letter
+//1 i
+//2 j
+//3 di
+//4 dj
+[function checkdiag]
+if <serv.list.<deval <argv[1]> + <argv[3]>>.<deval <argv[2]> + <argv[4]>>> == <argv[0]>
+    return 1
+else
+    return 0
+endif
+
+//0 index of line
+[function readlinetolist]
+while 1
+    local.c = <file.readchar>
+    if <local.c> == <def.linebreak>
+        return
+    endif
+    serv.list.<dargv[0]>.add <local.c>
+endwhile
+
+//0 char code, just for display
+[function t]
+if <argv[0]> == <def.x>
+    return "X"
+elif <argv[0]> == <def.m>
+    return "M"
+elif <argv[0]> == <def.a>
+    return "A"
+elif <argv[0]> == <def.s>
+    return "S"
+else
+    return "'<dargv[0]>'"
+
+[EOF]
