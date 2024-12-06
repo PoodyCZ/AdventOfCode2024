@@ -1,0 +1,79 @@
+[DefName advent]
+input           advent\2024\05\input.txt
+
+[Function run]
+File.Close
+If <File.Open <def.input>>
+    serv.list.left_rules.clear
+    serv.list.right_rules.clear
+    local.rules = 1
+    for i 1 <eval <File.FileLines <def.input>> - 1>
+        local.line = "<file.readline <local.i>>"
+        if <isempty <local.line>>
+            local.rules = 0
+        endif
+        
+        if <local.rules>
+            local.left = <STRSUB 0 2 <local.line>>
+            local.right = <STRSUB 3 2 <local.line>>
+            serv.list.left_rules.add <local.left>
+            serv.list.right_rules.add <local.right>
+        Elif !<isempty <local.line>>
+            serv.list.seq.set <local.line>
+            if <checkRules>
+                local.total += <serv.list.seq.<serv.list.seq.count> / 2>
+            else
+                local.totalIncorrect += <serv.list.seq.<serv.list.seq.count> / 2>
+            endif
+        endif
+    endfor
+
+    serv.log Sum of middle of correct updates <dlocal.total>
+    serv.log Sum of middle of incorrect updates <dlocal.totalIncorrect>
+Else
+    serv.log File could not be opened.
+EndIf
+
+[function checkRules]
+for r 0 <eval <serv.list.left_rules.count> - 1>
+    local.left = <serv.list.left_rules.<dlocal.r>>
+    local.right = <serv.list.right_rules.<dlocal.r>>
+    local.left_idx = <serv.list.seq.findelem <local.left>>
+    local.right_idx = <serv.list.seq.findelem <local.right>>
+    
+    if ((<local.left_idx> > 0) && (<local.right_idx> > 0))
+        if <local.left_idx> > <local.right_idx>
+            reorderSequence
+            return 0
+        endif
+    endif
+endfor
+return 1
+
+[function reorderSequence]
+clone seq, seqFor
+for i 0 <eval <serv.list.seqFor.count> - 1>
+    local.val = <serv.list.seqFor.<local.i>>
+    for r 0 <eval <serv.list.left_rules.count> - 1>
+        local.left = <serv.list.left_rules.<local.r>>
+        if <local.left> == <local.val>
+            local.right = <serv.list.right_rules.<local.r>>
+            local.left_idx = <serv.list.seq.findelem <local.left>>
+            local.right_idx = <serv.list.seq.findelem <local.right>>
+            if ((<local.right_idx> >= 0) && (<local.left_idx> > <local.right_idx>))
+                serv.list.seq.<local.left_idx>.remove
+                serv.list.seq.<local.right_idx>.insert <local.val>
+            endif
+        endif
+    endfor
+endfor
+return 0
+
+[function clone]
+serv.list.<argv[1]>.clear
+for i 0 <eval <serv.list.<argv[0]>.count> - 1>
+    serv.list.<argv[1]>.add <serv.list.<argv[0]>.<local.i>>
+endfor
+return
+
+[EOF]
